@@ -1,5 +1,5 @@
 require('proxy-polyfill')
-module.exports = module.exports.computed = function computed(obj) {
+module.exports = module.exports.computed = function computed (obj) {
   const bindings = Object.create(null)
   function updatePropertyBindings (target) {
     Object.keys(target).forEach(function (name) {
@@ -7,10 +7,15 @@ module.exports = module.exports.computed = function computed(obj) {
       if (prop instanceof ComputedProperty) {
         const propBindings = prop.__meta__.bindings
         for (var i = 0; i < propBindings.length; i++) {
-          if (!Array.isArray(bindings[propBindings[i]])) {
-            bindings[propBindings[i]] = []
+          const bindName = propBindings[i]
+          if (bindName.indexOf('@each') !== -1) {
+            // TODO: Loop through name and add bindings for each
+            debugger
           }
-          bindings[propBindings[i]].push(name)
+          if (!Array.isArray(bindings[bindName])) {
+            bindings[bindName] = []
+          }
+          bindings[bindName].push(name)
         }
       }
     })
@@ -68,7 +73,7 @@ module.exports = module.exports.computed = function computed(obj) {
   return new Proxy(updatePropertyBindings(obj), handler)
 }
 
-module.exports.property = function property() {
+module.exports.property = function property () {
   const bindings = Array.prototype.slice.call(arguments, 0, -1)
   const getset = Array.prototype.slice.call(arguments, -1)
   return new ComputedProperty(bindings, getset[0])
@@ -83,7 +88,7 @@ function ComputedProperty (bindings, getset) {
     readOnly: typeof getset.set !== 'function',
     cache: null,
     get: getset.get || function () { return null },
-    set: getset.set || function (key, val) { return val },
+    set: getset.set || function (key, val) { return val }
   }
 }
 

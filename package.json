@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "start": "budo test.js",
-    "test": "tape test.js"
+    "test": "standard && tape test.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "budo": "^10.0.3",
+    "standard": "^10.0.2",
     "tape": "^4.6.3"
   },
   "dependencies": {

@@ -6,7 +6,7 @@ test('computes a simple property', (t) => {
   const person = computed({
     lastName: 'Robinson Young',
     fullName: computed.property('firstName', 'lastName', {
-      get() {
+      get () {
         return `${this.firstName} ${this.lastName}`
       }
     })
@@ -25,7 +25,7 @@ test('dynamically add computed properties', (t) => {
     lastName: 'Robinson Young'
   })
   person.fullName = computed.property('firstName', 'lastName', {
-    get() {
+    get () {
       return `${this.firstName} ${this.lastName}`
     }
   })
@@ -40,7 +40,7 @@ test('computes an array', (t) => {
   const inventory = computed({
     items: ['one'],
     itemList: computed.property('items.[]', {
-      get() {
+      get () {
         return this.items.join(', ')
       }
     })
@@ -60,24 +60,44 @@ test('computes an array', (t) => {
 })
 
 // TODO: Make this work
-// test('computes properties of arrays', (t) => {
-//   const inventory = computed({
-//     items: computed.array([
-//       computed({ name: 'one' })
-//     ]),
-//     itemList: computed.property('items.@each.name', {
-//       get() {
-//         return this.items.map(function (item) {
-//           return item.name
-//         }).join(', ')
-//       }
-//     })
-//   })
-//   t.equal(inventory.itemList, 'one')
-//   inventory.items.push(computed({name: 'two'}))
-//   t.equal(inventory.itemList, 'one, two')
-//   t.end()
-// })
+test.skip('computes properties of arrays', (t) => {
+  const inventory = computed({
+    items: [
+      computed({ name: 'one' })
+    ],
+    itemList: computed.property('items.@each.name', {
+      get () {
+        return this.items.map(function (item) {
+          return item.name
+        }).join(', ')
+      }
+    })
+  })
+  t.equal(inventory.itemList, 'one')
+  inventory.items.push(computed({name: 'two'}))
+  t.equal(inventory.itemList, 'one, two')
+  t.end()
+})
+
+// TODO: Make this work
+test.skip('computes nested computed proxies', (t) => {
+  const profile = computed({
+    person: computed({
+      name: 'Kyle',
+      age: 34
+    }),
+    howOld: computed.property('person.name', 'person.age', {
+      get () {
+        return `${this.person.name} is ${this.person.age} years old`
+      }
+    })
+  })
+  t.equal(profile.howOld, 'Kyle is 34 years old')
+  profile.person.name = 'Crystal'
+  profile.person.age = 33
+  t.equal(profile.howOld, 'Crystal is 33 years old')
+  t.end()
+})
 
 // test('cannot set read only')
 // test('setting volatile works everytime')
