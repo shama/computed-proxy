@@ -1,0 +1,16 @@
+{
+  "name": "computed-proxy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "budo test.js",
+    "test": "tape test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "budo": "^10.0.3",
+    "tape": "^4.6.3"
+  }
+}
