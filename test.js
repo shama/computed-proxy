@@ -17,7 +17,7 @@ test('computes a simple property', (t) => {
   t.end()
 })
 
-test.only('computes an array', (t) => {
+test('computes an array', (t) => {
   const inventory = computed({
     items: ['one'],
     itemList: computed.property('items.[]', {
@@ -29,6 +29,14 @@ test.only('computes an array', (t) => {
   t.equal(inventory.itemList, 'one')
   inventory.items.push('two')
   t.equal(inventory.itemList, 'one, two')
+  inventory.items.splice(1, 0, '1 point 5')
+  t.equal(inventory.itemList, 'one, 1 point 5, two')
+  inventory.items.pop()
+  t.equal(inventory.itemList, 'one, 1 point 5')
+  inventory.items.unshift('zero')
+  t.equal(inventory.itemList, 'zero, one, 1 point 5')
+  inventory.items.shift()
+  t.equal(inventory.itemList, 'one, 1 point 5')
   t.end()
 })
 
