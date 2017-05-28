@@ -48,19 +48,16 @@ module.exports = module.exports.computed = function computed(obj) {
       return prop
     },
     set: function (target, name, value) {
-      var isDynamicBypassReadOnly = false
-      if (value instanceof ComputedProperty) {
-        target[name] = value
-        updatePropertyBindings(target)
-        isDynamicBypassReadOnly = true
-      }
       const prop = target[name]
       if (prop instanceof ComputedProperty) {
         const meta = prop.__meta__
-        if (meta.readOnly && !isDynamicBypassReadOnly) {
+        if (meta.readOnly) {
           throw new Error(name + ' is read only. Supply a set function to make this property settable.')
         }
         target[name] = meta.cache = meta.set.call(target, name, value)
+      } else if (value instanceof ComputedProperty) {
+        target[name] = value
+        updatePropertyBindings(target)
       } else {
         target[name] = value
       }
