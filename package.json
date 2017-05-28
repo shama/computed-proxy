@@ -12,5 +12,8 @@
   "devDependencies": {
     "budo": "^10.0.3",
     "tape": "^4.6.3"
+  },
+  "dependencies": {
+    "proxy-polyfill": "^0.1.6"
   }
 }

@@ -2,6 +2,7 @@ const test = require('tape')
 const computed = require('./index')
 
 test('computes a simple property', (t) => {
+  t.plan(2)
   const person = computed({
     lastName: 'Robinson Young',
     fullName: computed.property('firstName', 'lastName', {
@@ -17,7 +18,25 @@ test('computes a simple property', (t) => {
   t.end()
 })
 
+test('dynamically add computed properties', (t) => {
+  t.plan(2)
+  const person = computed({
+    firstName: 'Kyle',
+    lastName: 'Robinson Young'
+  })
+  person.fullName = computed.property('firstName', 'lastName', {
+    get() {
+      return `${this.firstName} ${this.lastName}`
+    }
+  })
+  t.equal(person.fullName, 'Kyle Robinson Young')
+  person.firstName = 'Crystal'
+  t.equal(person.fullName, 'Crystal Robinson Young')
+  t.end()
+})
+
 test('computes an array', (t) => {
+  t.plan(6)
   const inventory = computed({
     items: ['one'],
     itemList: computed.property('items.[]', {
@@ -59,3 +78,6 @@ test('computes an array', (t) => {
 //   t.equal(inventory.itemList, 'one, two')
 //   t.end()
 // })
+
+// test('cannot set read only')
+// test('setting volatile works everytime')

@@ -1,3 +1,4 @@
+require('proxy-polyfill')
 module.exports = module.exports.computed = function computed(obj) {
   const bindings = Object.create(null)
   function updatePropertyBindings (target) {
@@ -47,11 +48,16 @@ module.exports = module.exports.computed = function computed(obj) {
       return prop
     },
     set: function (target, name, value) {
-      // TODO: See if they are setting a ComputedProperty to add dynamic bindings
+      var isDynamicBypassReadOnly = false
+      if (value instanceof ComputedProperty) {
+        target[name] = value
+        updatePropertyBindings(target)
+        isDynamicBypassReadOnly = true
+      }
       const prop = target[name]
       if (prop instanceof ComputedProperty) {
         const meta = prop.__meta__
-        if (meta.readOnly) {
+        if (meta.readOnly && !isDynamicBypassReadOnly) {
           throw new Error(name + ' is read only. Supply a set function to make this property settable.')
         }
         target[name] = meta.cache = meta.set.call(target, name, value)
