@@ -119,5 +119,39 @@ test('computes nested computed proxies', (t) => {
   t.end()
 })
 
-// test('cannot set read only')
-// test('setting volatile works everytime')
+test('cannot set read only', (t) => {
+  t.plan(4)
+  const result = computed({
+    writeable: computed.property({
+      get () { return 'Kyle' },
+      set (key, val) { return val }
+    }),
+    readOnly: computed.property({
+      get () { return 'Issac' }
+    })
+  })
+  t.equal(result.writeable, 'Kyle')
+  t.equal(result.readOnly, 'Issac')
+  result.writeable = 'Crystal'
+  t.equal(result.writeable, 'Crystal')
+  t.throws(() => {
+    result.readOnly = 'Oliver'
+  }, 'Error: readOnly is read only. Supply a set function to make this property settable.')
+  t.end()
+})
+
+test('setting volatile works everytime', (t) => {
+  const person = computed({
+    firstName: 'Kyle',
+    fullName: computed.property({
+      get () {
+        return `${this.firstName} ${this.lastName}`
+      }
+    }).volatile()
+  })
+  person.lastName = 'Robinson Young'
+  t.equal(person.fullName, 'Kyle Robinson Young')
+  person.firstName = 'Crystal'
+  t.equal(person.fullName, 'Crystal Robinson Young', 'should change the name even though its not bound')
+  t.end()
+})

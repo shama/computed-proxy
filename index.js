@@ -102,6 +102,7 @@ function ComputedProperty (bindings, getset) {
 
 ComputedProperty.prototype.volatile = function () {
   this[METAKEY].volatile = true
+  return this
 }
 
 const arrayPropShim = ['push', 'unshift', 'pop', 'shift', 'splice', 'sort']
