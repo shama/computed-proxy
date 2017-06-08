@@ -141,6 +141,7 @@ test('cannot set read only', (t) => {
 })
 
 test('setting volatile works everytime', (t) => {
+  t.plan(2)
   const person = computed({
     firstName: 'Kyle',
     fullName: computed.property({
