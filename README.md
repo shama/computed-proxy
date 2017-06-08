@@ -148,8 +148,6 @@ person.notifyPropertChange('fullName')
 console.log(person.fullName) // Crystal Robinson Young
 ```
 
-
-
 #### Read Only By Default
 
 All properties are read only by default and will throw an error if you try and
