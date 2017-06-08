@@ -29,7 +29,7 @@ person.firstName = 'Crystal'
 console.log(person.fullName) // Crystal Robinson Young
 ```
 
-With Arrays:
+#### With Arrays
 
 ```js
 const computed = require('computed-proxy')
@@ -49,7 +49,7 @@ restaurant.food.push('steak')
 console.log(restaurant.menu) // sushi, steak
 ```
 
-With nested properties:
+#### With Nested Properties
 
 ```js
 const computed = require('computed-proxy')
@@ -73,7 +73,7 @@ profile.person.age = 33
 console.log(profile.howOld) // Crystal is 33 years old
 ```
 
-With Properties Nested in Arrays:
+#### With Properties Nested in Arrays
 
 ```js
 const computed = require('computed-proxy')
@@ -99,6 +99,56 @@ console.log(restaurant.menu) // sushi costs 50, steak costs 60
 restaurant.food[0].price = 70
 console.log(restaurant.menu) // sushi costs 70, steak costs 60
 ```
+
+#### Volatile
+
+Mark properties as `.volatile()` to compute them on every get:
+
+```js
+const computed = require('computed-proxy')
+
+const person = computed({
+  firstName: 'Kyle',
+  lastName: 'Robinson Young',
+  fullName: computed.property({
+    get () {
+      return `${this.firstName} ${this.lastName}`
+    }
+  }).volatile()
+})
+
+person.firstName = 'Crystal'
+console.log(person.fullName) // Crystal Robinson Young
+```
+
+#### Read Only By Default
+
+All properties are read only by default and will throw an error if you try and
+set them. If you want your property to be settable, provide a set function:
+
+```js
+const computed = require('computed-proxy')
+
+const person = computed({
+  firstName: 'Kyle',
+  lastName: 'Robinson Young',
+  upperName: computed.property('firstName', 'lastName', {
+    get (key, previous) {
+      return `${this.firstName} ${this.lastName}`.toUpperCase()
+    },
+    set (key, val, previous) {
+      return val.toUpperCase()
+    }
+  })
+})
+
+console.log(person.upperName) // KYLE ROBINSON YOUNG
+
+person.upperName = 'somebody else'
+console.log(person.upperName) // SOMEBODY ELSE
+```
+
+#### Shim
 
 In an environment that doesn't support `Proxy`? Shim it by including this in your code:
 
