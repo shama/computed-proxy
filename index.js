@@ -1,39 +1,26 @@
-require('proxy-polyfill')
+// require('proxy-polyfill')
 module.exports = module.exports.computed = function computed (obj) {
-  const bindings = Object.create(null)
-  function updatePropertyBindings (target) {
-    Object.keys(target).forEach(function (name) {
-      const prop = target[name]
-      if (prop instanceof ComputedProperty) {
-        const propBindings = prop.__meta__.bindings
-        for (var i = 0; i < propBindings.length; i++) {
-          const bindName = propBindings[i]
-          if (bindName.indexOf('@each') !== -1) {
-            // TODO: Loop through name and add bindings for each
-            debugger
-          }
-          if (!Array.isArray(bindings[bindName])) {
-            bindings[bindName] = []
-          }
-          bindings[bindName].push(name)
+  function indexComputedProperty (target, name) {
+    const property = target[name]
+    const propBindings = property.__meta__.bindings
+    for (var i = 0; i < propBindings.length; i++) {
+      const parts = propBindings[i].split('.')
+      var boundTarget = target
+      for (var j = 0; j < parts.length; j++) {
+        const part = parts[j]
+        if (isComputedProxy(boundTarget)) {
+          pushToObjectArray(boundTarget.__meta__.bindings, part, function () {
+            property.__meta__.dirty = true
+          })
+          boundTarget = boundTarget[part]
         }
-      }
-    })
-    if (!target.notifyPropertyChange) {
-      target.notifyPropertyChange = function (name) {
-        notifyPropertyChange(target, name)
       }
     }
-    return target
   }
   function notifyPropertyChange (target, name) {
-    if (bindings[name]) {
-      for (var i = 0; i < bindings[name].length; i++) {
-        const boundProp = target[bindings[name][i]]
-        if (boundProp instanceof ComputedProperty) {
-          boundProp.__meta__.dirty = true
-        }
-      }
+    const bindings = (target && target.__meta__ && target.__meta__.bindings && target.__meta__.bindings[name]) || []
+    for (var i = 0; i < bindings.length; i++) {
+      bindings[i].call(target, name)
     }
   }
   const handler = {
@@ -47,6 +34,7 @@ module.exports = module.exports.computed = function computed (obj) {
         }
         return meta.cache
       }
+      // Turn arrays into ComputedArrays if part of a ComputedProxy
       if (Array.isArray(prop) && !(prop instanceof ComputedArray)) {
         return new ComputedArray(target, name)
       }
@@ -62,7 +50,7 @@ module.exports = module.exports.computed = function computed (obj) {
         target[name] = meta.cache = meta.set.call(target, name, value)
       } else if (value instanceof ComputedProperty) {
         target[name] = value
-        updatePropertyBindings(target)
+        indexComputedProperty(target, name)
       } else {
         target[name] = value
       }
@@ -70,7 +58,18 @@ module.exports = module.exports.computed = function computed (obj) {
       return true
     }
   }
-  return new Proxy(updatePropertyBindings(obj), handler)
+  obj.__meta__ = { bindings: Object.create(null) }
+  Object.keys(obj).forEach(function (name) {
+    if (obj[name] instanceof ComputedProperty) {
+      indexComputedProperty(obj, name)
+    }
+  })
+  if (!obj.notifyPropertyChange) {
+    obj.notifyPropertyChange = function (name) {
+      notifyPropertyChange(obj, name)
+    }
+  }
+  return new Proxy(obj, handler)
 }
 
 module.exports.property = function property () {
@@ -96,17 +95,29 @@ ComputedProperty.prototype.volatile = function () {
   this.__meta__.volatile = true
 }
 
-const arrayPropShim = ['push', 'unshift', 'pop', 'shift', 'splice']
+const arrayPropShim = ['push', 'unshift', 'pop', 'shift', 'splice', 'sort']
 function ComputedArray (parent, property) {
   const handler = {
     get: function (target, name) {
       if (arrayPropShim.indexOf(name) !== -1) {
         return function () {
-          parent.notifyPropertyChange(property + '.[]')
+          parent.notifyPropertyChange(property)
           return target[name].apply(target, Array.prototype.slice.call(arguments))
         }
       }
     }
   }
   return new Proxy(parent[property], handler)
+}
+
+function isComputedProxy (prop) {
+  return prop && prop.__meta__ && prop.__meta__.bindings
+}
+
+function pushToObjectArray (obj, key, val) {
+  if (!Array.isArray(obj[key])) {
+    obj[key] = []
+  }
+  obj[key].push(val)
+  return obj[key]
 }

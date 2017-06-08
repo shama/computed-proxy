@@ -36,10 +36,10 @@ test('dynamically add computed properties', (t) => {
 })
 
 test('computes an array', (t) => {
-  t.plan(6)
+  t.plan(7)
   const inventory = computed({
     items: ['one'],
-    itemList: computed.property('items.[]', {
+    itemList: computed.property('items', {
       get () {
         return this.items.join(', ')
       }
@@ -56,6 +56,8 @@ test('computes an array', (t) => {
   t.equal(inventory.itemList, 'zero, one, 1 point 5')
   inventory.items.shift()
   t.equal(inventory.itemList, 'one, 1 point 5')
+  inventory.items.sort()
+  t.equal(inventory.itemList, '1 point 5, one')
   t.end()
 })
 
@@ -79,8 +81,7 @@ test.skip('computes properties of arrays', (t) => {
   t.end()
 })
 
-// TODO: Make this work
-test.skip('computes nested computed proxies', (t) => {
+test('computes nested computed proxies', (t) => {
   const profile = computed({
     person: computed({
       name: 'Kyle',
