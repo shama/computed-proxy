@@ -1,5 +1,4 @@
 const METAKEY = '__meta__'
-const COMPUTEDARRAYKEY = '__ComputedArray__'
 module.exports = module.exports.computed = function computed (obj) {
   function indexComputedProperty (target, name) {
     const property = target[name]
