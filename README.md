@@ -10,7 +10,7 @@ const computed = require('computed-proxy')
 const person = computed({
   lastName: 'Robinson Young',
   fullName: computed.property('firstName', 'lastName', {
-    get () {
+    get (key, previous) {
       return `${this.firstName} ${this.lastName}`
     }
   })
@@ -31,7 +31,7 @@ const computed = require('computed-proxy')
 const restaurant = computed({
   food: ['sushi'],
   menu: computed.property('food', {
-    get () {
+    get (key, previous) {
       return this.food.join(', ')
     }
   })
@@ -54,7 +54,7 @@ const profile = computed({
     age: 34
   }),
   who: computed.property('person.name', 'person.age', {
-    get () {
+    get (key, previous) {
       return `${this.person.name} is ${this.person.age} years old`
     }
   })
