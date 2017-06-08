@@ -121,6 +121,35 @@ person.firstName = 'Crystal'
 console.log(person.fullName) // Crystal Robinson Young
 ```
 
+#### Manually Trigger a Binding
+
+If you want to manually mark a property to recompute on next get use `.notifyPropertChange()`:
+
+```js
+const computed = require('computed-proxy')
+
+const person = computed({
+  firstName: 'Kyle',
+  lastName: 'Robinson Young',
+  fullName: computed.property('lastName', {
+    get (key, previous) {
+      return `${this.firstName} ${this.lastName}`
+    }
+  })
+})
+
+console.log(person.fullName) // Kyle Robinson Young
+
+person.firstName = 'Crystal'
+// Since fullName isnt bound to firstName, the get doesn't recompute
+console.log(person.fullName) // Kyle Robinson Young
+
+person.notifyPropertChange('fullName')
+console.log(person.fullName) // Crystal Robinson Young
+```
+
+
+
 #### Read Only By Default
 
 All properties are read only by default and will throw an error if you try and
