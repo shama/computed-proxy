@@ -67,7 +67,34 @@ profile.person.age = 33
 console.log(profile.howOld) // Crystal is 33 years old
 ```
 
+With Properties Nested in Arrays:
+
+```js
+const computed = require('computed-proxy')
+
+const restaurant = computed({
+  food: [
+    computed({ name: 'sushi', price: 50 })
+  ],
+  menu: computed.property('food.name', 'food.price', {
+    get (key, previous) {
+      return this.food.map(function (item) {
+        return `${item.name} costs ${item.price}`
+      }).join(', ')
+    }
+  })
+})
+
+console.log(restaurant.menu) // sushi costs 50
+
+restaurant.food.push(computed({ name: 'steak', price: 60 }))
+console.log(restaurant.menu) // sushi costs 50, steak costs 60
+
+restaurant.food[0].price = 70
+console.log(restaurant.menu) // sushi costs 70, steak costs 60
+```
+
 ### Similar Projects
 
-* npmjs.com/computed
-* Ember.js Computed Properties
+* [npmjs.com/computed](https://www.npmjs.com/package/computed)
+* [Ember.js Computed Property](https://emberjs.com/api/classes/Ember.ComputedProperty.html)

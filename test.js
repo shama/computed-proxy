@@ -82,13 +82,13 @@ test('computes an array', (t) => {
   t.end()
 })
 
-// TODO: Make this work
-test.skip('computes properties of arrays', (t) => {
+test('computes properties of arrays', (t) => {
+  t.plan(3)
   const inventory = computed({
     items: [
       computed({ name: 'one' })
     ],
-    itemList: computed.property('items.@each.name', {
+    itemList: computed.property('items.name', {
       get () {
         return this.items.map(function (item) {
           return item.name
@@ -99,6 +99,8 @@ test.skip('computes properties of arrays', (t) => {
   t.equal(inventory.itemList, 'one')
   inventory.items.push(computed({name: 'two'}))
   t.equal(inventory.itemList, 'one, two')
+  inventory.items[0].name = 'changed'
+  t.equal(inventory.itemList, 'changed, two')
   t.end()
 })
 

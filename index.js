@@ -1,20 +1,28 @@
-// require('proxy-polyfill')
 const METAKEY = '__meta__'
+const COMPUTEDARRAYKEY = '__ComputedArray__'
 module.exports = module.exports.computed = function computed (obj) {
   function indexComputedProperty (target, name) {
     const property = target[name]
     const propBindings = property[METAKEY].bindings
     for (var i = 0; i < propBindings.length; i++) {
-      const parts = propBindings[i].split('.')
-      var boundTarget = target
-      for (var j = 0; j < parts.length; j++) {
-        const part = parts[j]
+      processBindings(target, propBindings[i].split('.'))
+    }
+    function processBindings (boundTarget, bindings) {
+      let binding = bindings.shift()
+      while (binding) {
         if (isComputedProxy(boundTarget)) {
-          pushToObjectArray(boundTarget[METAKEY].bindings, part, function () {
+          pushToObjectArray(boundTarget[METAKEY].bindings, binding, function () {
             property[METAKEY].dirty = true
           })
-          boundTarget = boundTarget[part]
+          boundTarget = asPropOrComputedArray(boundTarget, binding)
+        } else if (Array.isArray(boundTarget)) {
+          const childBindings = bindings.slice()
+          childBindings.unshift(binding)
+          for (var k = 0; k < boundTarget.length; k++) {
+            processBindings(boundTarget[k], childBindings)
+          }
         }
+        binding = bindings.shift()
       }
     }
   }
@@ -27,7 +35,7 @@ module.exports = module.exports.computed = function computed (obj) {
   const handler = {
     get: function (target, name) {
       const prop = target[name]
-      if (prop instanceof ComputedProperty) {
+      if (isComputedProperty(prop)) {
         const meta = prop[METAKEY]
         if (meta.dirty || meta.volatile) {
           meta.cache = meta.get.call(target, name, meta.cache)
@@ -35,21 +43,18 @@ module.exports = module.exports.computed = function computed (obj) {
         }
         return meta.cache
       }
-      // Turn arrays into ComputedArrays if part of a ComputedProxy
-      if (Array.isArray(prop) && !(prop instanceof ComputedArray)) {
-        return new ComputedArray(target, name)
-      }
-      return prop
+      // Return the prop (or as a ComputedArray if an Array)
+      return asPropOrComputedArray(target, name)
     },
     set: function (target, name, value) {
       const prop = target[name]
-      if (prop instanceof ComputedProperty) {
+      if (isComputedProperty(prop)) {
         const meta = prop[METAKEY]
         if (meta.readOnly) {
           throw new Error(name + ' is read only. Supply a set function to make this property settable.')
         }
         target[name] = meta.cache = meta.set.call(target, name, value, meta.cache)
-      } else if (value instanceof ComputedProperty) {
+      } else if (isComputedProperty(value)) {
         target[name] = value
         indexComputedProperty(target, name)
       } else {
@@ -66,7 +71,7 @@ module.exports = module.exports.computed = function computed (obj) {
     })
   }
   Object.keys(obj).forEach(function (name) {
-    if (obj[name] instanceof ComputedProperty) {
+    if (isComputedProperty(obj[name])) {
       indexComputedProperty(obj, name)
     }
   })
@@ -123,6 +128,20 @@ function ComputedArray (parent, property) {
 
 function isComputedProxy (prop) {
   return prop && prop[METAKEY] && prop[METAKEY].bindings
+}
+
+function isComputedProperty (prop) {
+  return prop instanceof ComputedProperty
+}
+
+// Turn arrays into ComputedArrays if part of a ComputedProxy
+function asPropOrComputedArray (target, name) {
+  const prop = target[name]
+  if (Array.isArray(prop)) {
+    // TODO: Is this turning arrays in to computed arrays too much?
+    return new ComputedArray(target, name)
+  }
+  return prop
 }
 
 function pushToObjectArray (obj, key, val) {
