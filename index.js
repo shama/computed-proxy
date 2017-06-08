@@ -1,16 +1,17 @@
 // require('proxy-polyfill')
+const METAKEY = '__meta__'
 module.exports = module.exports.computed = function computed (obj) {
   function indexComputedProperty (target, name) {
     const property = target[name]
-    const propBindings = property.__meta__.bindings
+    const propBindings = property[METAKEY].bindings
     for (var i = 0; i < propBindings.length; i++) {
       const parts = propBindings[i].split('.')
       var boundTarget = target
       for (var j = 0; j < parts.length; j++) {
         const part = parts[j]
         if (isComputedProxy(boundTarget)) {
-          pushToObjectArray(boundTarget.__meta__.bindings, part, function () {
-            property.__meta__.dirty = true
+          pushToObjectArray(boundTarget[METAKEY].bindings, part, function () {
+            property[METAKEY].dirty = true
           })
           boundTarget = boundTarget[part]
         }
@@ -18,7 +19,7 @@ module.exports = module.exports.computed = function computed (obj) {
     }
   }
   function notifyPropertyChange (target, name) {
-    const bindings = (target && target.__meta__ && target.__meta__.bindings && target.__meta__.bindings[name]) || []
+    const bindings = (target && target[METAKEY] && target[METAKEY].bindings && target[METAKEY].bindings[name]) || []
     for (var i = 0; i < bindings.length; i++) {
       bindings[i].call(target, name)
     }
@@ -27,7 +28,7 @@ module.exports = module.exports.computed = function computed (obj) {
     get: function (target, name) {
       const prop = target[name]
       if (prop instanceof ComputedProperty) {
-        const meta = prop.__meta__
+        const meta = prop[METAKEY]
         if (meta.dirty || meta.volatile) {
           meta.cache = meta.get.call(target, name)
           meta.dirty = false
@@ -43,7 +44,7 @@ module.exports = module.exports.computed = function computed (obj) {
     set: function (target, name, value) {
       const prop = target[name]
       if (prop instanceof ComputedProperty) {
-        const meta = prop.__meta__
+        const meta = prop[METAKEY]
         if (meta.readOnly) {
           throw new Error(name + ' is read only. Supply a set function to make this property settable.')
         }
@@ -58,7 +59,12 @@ module.exports = module.exports.computed = function computed (obj) {
       return true
     }
   }
-  obj.__meta__ = { bindings: Object.create(null) }
+  if (!obj[METAKEY]) {
+    Object.defineProperty(obj, METAKEY, {
+      enumerable: false,
+      value: { bindings: Object.create(null) }
+    })
+  }
   Object.keys(obj).forEach(function (name) {
     if (obj[name] instanceof ComputedProperty) {
       indexComputedProperty(obj, name)
@@ -80,19 +86,22 @@ module.exports.property = function property () {
 
 function ComputedProperty (bindings, getset) {
   getset = getset || {}
-  this.__meta__ = {
-    bindings: bindings,
-    dirty: true,
-    volatile: false,
-    readOnly: typeof getset.set !== 'function',
-    cache: null,
-    get: getset.get || function () { return null },
-    set: getset.set || function (key, val) { return val }
-  }
+  Object.defineProperty(this, METAKEY, {
+    enumerable: false,
+    value: {
+      bindings: bindings,
+      dirty: true,
+      volatile: false,
+      readOnly: typeof getset.set !== 'function',
+      cache: null,
+      get: getset.get || function () { return null },
+      set: getset.set || function (key, val) { return val }
+    }
+  })
 }
 
 ComputedProperty.prototype.volatile = function () {
-  this.__meta__.volatile = true
+  this[METAKEY].volatile = true
 }
 
 const arrayPropShim = ['push', 'unshift', 'pop', 'shift', 'splice', 'sort']
@@ -105,13 +114,14 @@ function ComputedArray (parent, property) {
           return target[name].apply(target, Array.prototype.slice.call(arguments))
         }
       }
+      return target[name]
     }
   }
   return new Proxy(parent[property], handler)
 }
 
 function isComputedProxy (prop) {
-  return prop && prop.__meta__ && prop.__meta__.bindings
+  return prop && prop[METAKEY] && prop[METAKEY].bindings
 }
 
 function pushToObjectArray (obj, key, val) {

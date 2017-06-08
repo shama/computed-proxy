@@ -46,4 +46,4 @@ console.log(restaurant.menu) // sushi, steak
 ### Similar Projects
 
 * npmjs.com/computed
-* Ember.js
+* Ember.js Computed Properties

@@ -82,21 +82,40 @@ test.skip('computes properties of arrays', (t) => {
 })
 
 test('computes nested computed proxies', (t) => {
+  t.plan(7)
   const profile = computed({
     person: computed({
       name: 'Kyle',
-      age: 34
+      age: 34,
+      children: ['Issac', 'Oliver']
     }),
     howOld: computed.property('person.name', 'person.age', {
       get () {
         return `${this.person.name} is ${this.person.age} years old`
       }
+    }),
+    kids: computed.property('person.children', {
+      get () {
+        return this.person.children.join(', ')
+      }
+    }),
+    personAsJSON: computed.property('person', {
+      get () {
+        return JSON.stringify(this.person)
+      }
     })
   })
   t.equal(profile.howOld, 'Kyle is 34 years old')
+  t.equal(profile.kids, 'Issac, Oliver')
+  t.equal(profile.personAsJSON, '{"name":"Kyle","age":34,"children":["Issac","Oliver"]}')
   profile.person.name = 'Crystal'
   profile.person.age = 33
+  profile.person.children.push('Oh no!')
   t.equal(profile.howOld, 'Crystal is 33 years old')
+  t.equal(profile.kids, 'Issac, Oliver, Oh no!', 'A kid was added')
+  t.equal(profile.personAsJSON, '{"name":"Kyle","age":34,"children":["Issac","Oliver"]}', 'person itself hasnt been set, so this doesnt fire')
+  profile.person = computed({name: 'Crystal', age: 33, children: ['Issac', 'Oliver', 'Oh no!']})
+  t.equal(profile.personAsJSON, '{"name":"Crystal","age":33,"children":["Issac","Oliver","Oh no!"]}', 'only after person is set will it fire')
   t.end()
 })
 
