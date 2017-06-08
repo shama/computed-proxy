@@ -30,7 +30,7 @@ const computed = require('computed-proxy')
 
 const restaurant = computed({
   food: ['sushi'],
-  menu: computed.property('food.[]', {
+  menu: computed.property('food', {
     get() {
       return this.food.join(', ')
     }
