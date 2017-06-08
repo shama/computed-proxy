@@ -18,6 +18,27 @@ test('computes a simple property', (t) => {
   t.end()
 })
 
+test('get cached value when getting or setting', (t) => {
+  t.plan(3)
+  const result = computed({
+    prop: 'First',
+    computer: computed.property('prop', {
+      get (key, prev) {
+        return [this.prop, key, prev || 'null'].join(',')
+      },
+      set (key, val, prev) {
+        return [this.prop, key, val, prev || 'null'].join(',')
+      }
+    })
+  })
+  t.equal(result.computer, 'First,computer,null')
+  result.prop = 'Second'
+  t.equal(result.computer, 'Second,computer,First,computer,null', 'should include the previous value of the first get')
+  result.computer = 'Third'
+  t.equal(result.computer, 'Second,computer,Third,Second,computer,First,computer,null', 'should include "prop", computed key, value setting to and previous value')
+  t.end()
+})
+
 test('dynamically add computed properties', (t) => {
   t.plan(2)
   const person = computed({
