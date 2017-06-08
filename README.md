@@ -94,6 +94,12 @@ restaurant.food[0].price = 70
 console.log(restaurant.menu) // sushi costs 70, steak costs 60
 ```
 
+In an environment that doesn't support `Proxy`? Shim it by including this in your code:
+
+```js
+require('computed-proxy/shim')
+```
+
 ### Similar Projects
 
 * [npmjs.com/computed](https://www.npmjs.com/package/computed)
