@@ -7,6 +7,7 @@ module.exports = module.exports.computed = function computed (obj) {
       processBindings(target, propBindings[i].split('.'))
     }
     function processBindings (boundTarget, bindings) {
+      bindings = bindings.slice()
       let binding = bindings.shift()
       while (binding) {
         if (isComputedProxy(boundTarget)) {
@@ -17,8 +18,8 @@ module.exports = module.exports.computed = function computed (obj) {
         } else if (Array.isArray(boundTarget)) {
           const childBindings = bindings.slice()
           childBindings.unshift(binding)
-          for (var k = 0; k < boundTarget.length; k++) {
-            processBindings(boundTarget[k], childBindings)
+          for (var i = 0; i < boundTarget.length; i++) {
+            processBindings(boundTarget[i], childBindings)
           }
         }
         binding = bindings.shift()

@@ -104,6 +104,33 @@ test('computes properties of arrays', (t) => {
   t.end()
 })
 
+test('computes on more complex arrays', (t) => {
+  t.plan(4)
+  const inventory = computed({
+    items: [
+      computed({ name: 'one', num: 1 }),
+      computed({ name: 'two', num: 2 }),
+      computed({ name: 'three', num: 3 })
+    ],
+    itemList: computed.property('items.name', 'items.num', {
+      get () {
+        return this.items.map(function (item) {
+          return `${item.name} ${item.num}`
+        }).join(', ')
+      }
+    })
+  })
+  t.equal(inventory.itemList, 'one 1, two 2, three 3')
+  inventory.items[0].name = 'changedOne'
+  t.equal(inventory.itemList, 'changedOne 1, two 2, three 3')
+  inventory.items[1].num = 2.5
+  t.equal(inventory.itemList, 'changedOne 1, two 2.5, three 3')
+  inventory.items[2].name = 'changedThree'
+  inventory.items[2].num = false
+  t.equal(inventory.itemList, 'changedOne 1, two 2.5, changedThree false')
+  t.end()
+})
+
 test('computes nested computed proxies', (t) => {
   t.plan(7)
   const profile = computed({
