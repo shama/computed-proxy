@@ -1,5 +1,11 @@
 # computed-proxy
 
+[![NPM version][npm-image]][npm-url]
+[![build status][travis-image]][travis-url]
+[![Downloads][downloads-image]][downloads-url]
+[![js-standard-style][standard-image]][standard-url]
+![experimental][experimental-image]
+
 Computed properties with [JavaScript Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
 
 ### Examples
@@ -104,3 +110,16 @@ require('computed-proxy/shim')
 
 * [npmjs.com/computed](https://www.npmjs.com/package/computed)
 * [Ember.js Computed Property](https://emberjs.com/api/classes/Ember.ComputedProperty.html)
+
+# license
+(c) 2017 Kyle Robinson Young. MIT License
+
+[npm-image]: https://img.shields.io/npm/v/computed-proxy.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/computed-proxy
+[travis-image]: https://img.shields.io/travis/shama/computed-proxy/master.svg?style=flat-square
+[travis-url]: https://travis-ci.org/shama/computed-proxy
+[downloads-image]: http://img.shields.io/npm/dm/vel.svg?style=flat-square
+[downloads-url]: https://npmjs.org/package/computed-proxy
+[standard-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square
+[standard-url]: https://github.com/feross/standard
+[experimental-image]: https://img.shields.io/badge/stability-experimental-orange.svg?style=flat-square

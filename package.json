@@ -1,14 +1,27 @@
 {
   "name": "computed-proxy",
   "version": "1.0.0",
-  "description": "",
+  "description": "Computed properties with JavaScript Proxy",
   "main": "index.js",
   "scripts": {
     "start": "budo test.js",
     "test": "standard && tape test.js"
   },
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shama/computed-proxy"
+  },
+  "keywords": [
+    "computed",
+    "property",
+    "proxy"
+  ],
+  "author": "Kyle Robinson Young <kyle@dontkry.com> (http://dontkry.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shama/computed-proxy/issues"
+  },
+  "homepage": "https://github.com/shama/computed-proxy",
   "devDependencies": {
     "budo": "^10.0.3",
     "standard": "^10.0.2",
