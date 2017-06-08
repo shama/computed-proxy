@@ -53,18 +53,18 @@ const profile = computed({
     name: 'Kyle',
     age: 34
   }),
-  who: computed.property('person.name', 'person.age', {
+  howOld: computed.property('person.name', 'person.age', {
     get (key, previous) {
       return `${this.person.name} is ${this.person.age} years old`
     }
   })
 })
 
-console.log(profile.who) // Kyle is 34 years old
+console.log(profile.howOld) // Kyle is 34 years old
 
 profile.person.name = 'Crystal'
 profile.person.age = 33
-console.log(profile.who) // Crystal is 33 years old
+console.log(profile.howOld) // Crystal is 33 years old
 ```
 
 ### Similar Projects
