@@ -6,7 +6,7 @@ module.exports = module.exports.computed = function computed (obj) {
       if (isComputedProperty(prop)) {
         const meta = prop[METAKEY]
         if (meta.dirty || meta.volatile) {
-          meta.cache = meta.get.call(target, name, meta.cache)
+          meta.cache = meta.get.call(obj, name, meta.cache)
           meta.dirty = false
         }
         return meta.cache
@@ -21,7 +21,7 @@ module.exports = module.exports.computed = function computed (obj) {
         if (meta.readOnly) {
           throw new Error(name + ' is read only. Supply a set function to make this property settable.')
         }
-        target[name] = meta.cache = meta.set.call(target, name, value, meta.cache)
+        target[name] = meta.cache = meta.set.call(obj, name, value, meta.cache)
       } else if (isComputedProperty(value)) {
         target[name] = value
         indexComputedProperty(target, name)
