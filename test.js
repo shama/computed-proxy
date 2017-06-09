@@ -206,3 +206,29 @@ test('setting volatile works everytime', (t) => {
   t.equal(person.fullName, 'Crystal Robinson Young', 'should change the name even though its not bound')
   t.end()
 })
+
+test('pushing a new computed proxy to array reindexes bindings', (t) => {
+  t.plan(3)
+  const component = computed({
+    todos: [
+      computed({ label: 'Exercise', done: true }),
+      computed({ label: 'Laundry', done: false })
+    ],
+    addItem () {
+      this.todos.push(computed({ label: 'New!', done: false }))
+    },
+    element: computed.property('todos.label', 'todos.done', {
+      get () {
+        return `<ul>${this.todos.map(function (todo) {
+          return `<li>${todo.done} ${todo.label}</li>`
+        }).join('')}</ul>`
+      }
+    })
+  })
+  t.equal(component.element, '<ul><li>true Exercise</li><li>false Laundry</li></ul>')
+  component.addItem()
+  t.equal(component.element, '<ul><li>true Exercise</li><li>false Laundry</li><li>false New!</li></ul>')
+  component.todos[2].done = true
+  t.equal(component.element, '<ul><li>true Exercise</li><li>false Laundry</li><li>true New!</li></ul>')
+  t.end()
+})

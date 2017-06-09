@@ -1,37 +1,5 @@
 const METAKEY = '__meta__'
 module.exports = module.exports.computed = function computed (obj) {
-  function indexComputedProperty (target, name) {
-    const property = target[name]
-    const propBindings = property[METAKEY].bindings
-    for (var i = 0; i < propBindings.length; i++) {
-      processBindings(target, propBindings[i].split('.'))
-    }
-    function processBindings (boundTarget, bindings) {
-      bindings = bindings.slice()
-      let binding = bindings.shift()
-      while (binding) {
-        if (isComputedProxy(boundTarget)) {
-          pushToObjectArray(boundTarget[METAKEY].bindings, binding, function () {
-            property[METAKEY].dirty = true
-          })
-          boundTarget = asPropOrComputedArray(boundTarget, binding)
-        } else if (Array.isArray(boundTarget)) {
-          const childBindings = bindings.slice()
-          childBindings.unshift(binding)
-          for (var i = 0; i < boundTarget.length; i++) {
-            processBindings(boundTarget[i], childBindings)
-          }
-        }
-        binding = bindings.shift()
-      }
-    }
-  }
-  function notifyPropertyChange (target, name) {
-    const bindings = (target && target[METAKEY] && target[METAKEY].bindings && target[METAKEY].bindings[name]) || []
-    for (var i = 0; i < bindings.length; i++) {
-      bindings[i].call(target, name)
-    }
-  }
   const handler = {
     get: function (target, name) {
       const prop = target[name]
@@ -70,11 +38,7 @@ module.exports = module.exports.computed = function computed (obj) {
       value: { bindings: Object.create(null) }
     })
   }
-  Object.keys(obj).forEach(function (name) {
-    if (isComputedProperty(obj[name])) {
-      indexComputedProperty(obj, name)
-    }
-  })
+  reindexComputedProperties(obj)
   if (!obj.notifyPropertyChange) {
     obj.notifyPropertyChange = function (name) {
       notifyPropertyChange(obj, name)
@@ -117,8 +81,23 @@ function ComputedArray (parent, property) {
     get: function (target, name) {
       if (arrayPropShim.indexOf(name) !== -1) {
         return function () {
+          // Check if we are adding a computed proxy to setup bindings
+          let needReindex = false
+          if (name === 'push' || name === 'unshift' || name === 'splice') {
+            const args = Array.prototype.slice.call(arguments)
+            for (var i = 0; i < args.length; i++) {
+              if (isComputedProxy(args[i])) {
+                needReindex = true
+                break
+              }
+            }
+          }
+          const result = target[name].apply(target, Array.prototype.slice.call(arguments))
+          if (needReindex) {
+            reindexComputedProperties(parent)
+          }
           parent.notifyPropertyChange(property)
-          return target[name].apply(target, Array.prototype.slice.call(arguments))
+          return result
         }
       }
       return target[name]
@@ -126,6 +105,48 @@ function ComputedArray (parent, property) {
   }
   parent[property] = new Proxy(parent[property], handler)
   return parent[property]
+}
+
+function indexComputedProperty (target, name) {
+  const property = target[name]
+  const propBindings = property[METAKEY].bindings
+  for (var i = 0; i < propBindings.length; i++) {
+    processBindings(target, propBindings[i].split('.'))
+  }
+  function processBindings (boundTarget, bindings) {
+    bindings = bindings.slice()
+    let binding = bindings.shift()
+    while (binding) {
+      if (isComputedProxy(boundTarget)) {
+        pushToObjectArray(boundTarget[METAKEY].bindings, binding, function () {
+          property[METAKEY].dirty = true
+        })
+        boundTarget = asPropOrComputedArray(boundTarget, binding)
+      } else if (Array.isArray(boundTarget)) {
+        const childBindings = bindings.slice()
+        childBindings.unshift(binding)
+        for (var i = 0; i < boundTarget.length; i++) {
+          processBindings(boundTarget[i], childBindings)
+        }
+      }
+      binding = bindings.shift()
+    }
+  }
+}
+
+function reindexComputedProperties (target) {
+  Object.keys(target).forEach(function (name) {
+    if (isComputedProperty(target[name])) {
+      indexComputedProperty(target, name)
+    }
+  })
+}
+
+function notifyPropertyChange (target, name) {
+  const bindings = (target && target[METAKEY] && target[METAKEY].bindings && target[METAKEY].bindings[name]) || []
+  for (var i = 0; i < bindings.length; i++) {
+    bindings[i].call(target, name)
+  }
 }
 
 function isComputedProxy (prop) {
