@@ -1,6 +1,6 @@
 {
   "name": "computed-proxy",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Computed properties with JavaScript Proxy",
   "main": "index.js",
   "scripts": {
