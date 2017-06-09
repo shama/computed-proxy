@@ -80,7 +80,8 @@ module.exports = module.exports.computed = function computed (obj) {
       notifyPropertyChange(obj, name)
     }
   }
-  return new Proxy(obj, handler)
+  obj = new Proxy(obj, handler)
+  return obj
 }
 
 module.exports.property = function property () {
@@ -123,7 +124,8 @@ function ComputedArray (parent, property) {
       return target[name]
     }
   }
-  return new Proxy(parent[property], handler)
+  parent[property] = new Proxy(parent[property], handler)
+  return parent[property]
 }
 
 function isComputedProxy (prop) {
